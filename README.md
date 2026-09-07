@@ -1,15 +1,13 @@
-# ChoreWheel: Shared Household Chores Tool
+# AI Dev Tools Zoomcamp 2026 - Workspaces & Homework
 
-A Django application for managing shared household chores with automated weekly rotation and check-in tracking. Built as part of [DataTalksClub AI Dev Tools Zoomcamp 2026 (Homework 1)](https://github.com/DataTalksClub/ai-dev-tools-zoomcamp).
+This repository contains homework assignments, practical projects, and experiments for the [AI Dev Tools Zoomcamp 2026](https://github.com/DataTalksClub/ai-dev-tools-zoomcamp) by DataTalks.Club.
 
-## Features
-1. **Member & Chore Management**: Add household members and define chores.
-2. **Weekly Rotation Engine**: Automatically assign tasks in round-robin order.
-3. **Completion Check-in**: Mark tasks done and track activity history.
+## Course Structure & Homeworks
 
-## Setup & Run
-```bash
-uv venv
-uv run python manage.py migrate
-uv run python manage.py runserver
-```
+| Module | Topic | Folder | Status |
+| :--- | :--- | :--- | :--- |
+| **HW 1** | AI-Native Developer Workflow (Spec-driven Django App) | [`hw1/`](./hw1) | Completed |
+| **HW 2** | Full-Stack App with AI Assistants | `hw2/` | Upcoming |
+| **HW 3** | Test, Containerize, and Deploy an AI-Assisted App | `hw3/` | Upcoming |
+| **HW 4** | DevOps and Observability for AI-Built Apps | `hw4/` | Upcoming |
+| **Final Project** | End-to-End AI-Assisted Application | `project/` | Upcoming |
