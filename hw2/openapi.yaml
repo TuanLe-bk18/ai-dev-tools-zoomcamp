@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: SeatFlow API
+  description: Restaurant Waitlist Manager API
+  version: 0.1.0
+paths:
+  /api/parties:
+    get:
+      summary: List waitlist parties
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [active, waiting, notified, seated, cancelled, all]
+            default: active
+      responses:
+        '200':
+          description: List of parties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Party'
+    post:
+      summary: Add new party to waitlist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartyCreate'
+      responses:
+        '201':
+          description: Party created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+        '422':
+          description: Validation error
+
+  /api/parties/{party_id}:
+    patch:
+      summary: Update party details or status
+      parameters:
+        - name: party_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartyUpdate'
+      responses:
+        '200':
+          description: Party updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Party'
+        '404':
+          description: Party not found
+    delete:
+      summary: Delete party from waitlist
+      parameters:
+        - name: party_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Party deleted
+        '404':
+          description: Party not found
+
+components:
+  schemas:
+    PartyStatus:
+      type: string
+      enum: [waiting, notified, seated, cancelled]
+
+    Party:
+      type: object
+      required:
+        - id
+        - name
+        - party_size
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Sarah Connor
+        party_size:
+          type: integer
+          minimum: 1
+          example: 4
+        phone:
+          type: string
+          nullable: true
+          example: 555-0199
+        notes:
+          type: string
+          nullable: true
+          example: Needs high chair
+        status:
+          $ref: '#/components/schemas/PartyStatus'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PartyCreate:
+      type: object
+      required:
+        - name
+        - party_size
+      properties:
+        name:
+          type: string
+          minLength: 1
+          example: Sarah Connor
+        party_size:
+          type: integer
+          minimum: 1
+          example: 4
+        phone:
+          type: string
+          nullable: true
+          example: 555-0199
+        notes:
+          type: string
+          nullable: true
+          example: Needs high chair
+
+    PartyUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/PartyStatus'
+        notes:
+          type: string
+          nullable: true
+        party_size:
+          type: integer
+          minimum: 1
