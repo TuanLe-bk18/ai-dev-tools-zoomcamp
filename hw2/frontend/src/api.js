@@ -1,107 +1,66 @@
-// Centralized API client (Currently mocked with localStorage persistence for prototype)
+// HTTP API Client connecting Frontend to FastAPI Backend
 
-const STORAGE_KEY = 'seatflow_parties_mock'
-
-const INITIAL_PARTIES = [
-  {
-    id: 1,
-    name: 'Sarah Connor',
-    party_size: 4,
-    phone: '555-0199',
-    notes: 'Needs high chair',
-    status: 'waiting',
-    created_at: new Date(Date.now() - 18 * 60000).toISOString(),
-    updated_at: new Date(Date.now() - 18 * 60000).toISOString()
-  },
-  {
-    id: 2,
-    name: 'David Miller',
-    party_size: 2,
-    phone: '555-0142',
-    notes: 'Window booth preferred',
-    status: 'notified',
-    created_at: new Date(Date.now() - 12 * 60000).toISOString(),
-    updated_at: new Date(Date.now() - 2 * 60000).toISOString()
-  },
-  {
-    id: 3,
-    name: 'Elena Rostova',
-    party_size: 6,
-    phone: '555-0183',
-    notes: 'Birthday dinner',
-    status: 'waiting',
-    created_at: new Date(Date.now() - 5 * 60000).toISOString(),
-    updated_at: new Date(Date.now() - 5 * 60000).toISOString()
-  }
-]
-
-function getStoredParties() {
-  const raw = localStorage.getItem(STORAGE_KEY)
-  if (!raw) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PARTIES))
-    return INITIAL_PARTIES
-  }
-  try {
-    return JSON.parse(raw)
-  } catch {
-    return INITIAL_PARTIES
-  }
-}
-
-function saveStoredParties(parties) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(parties))
-}
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 export const api = {
-  async getParties(statusFilter = null) {
-    await new Promise((r) => setTimeout(r, 60)) // simulate network latency
-    const parties = getStoredParties()
-    if (!statusFilter || statusFilter === 'all') {
-      return parties
+  async getParties(statusFilter = 'active') {
+    const url = new URL(`${API_BASE_URL}/api/parties`)
+    if (statusFilter) {
+      url.searchParams.set('status', statusFilter)
     }
-    if (statusFilter === 'active') {
-      return parties.filter((p) => p.status === 'waiting' || p.status === 'notified')
+
+    const response = await fetch(url.toString())
+    if (!response.ok) {
+      throw new Error(`Failed to fetch parties: ${response.statusText}`)
     }
-    return parties.filter((p) => p.status === statusFilter)
+    return response.json()
   },
 
   async createParty(data) {
-    await new Promise((r) => setTimeout(r, 80))
-    const parties = getStoredParties()
-    const newParty = {
-      id: Date.now(),
-      name: data.name.trim(),
-      party_size: Number(data.party_size) || 1,
-      phone: data.phone?.trim() || '',
-      notes: data.notes?.trim() || '',
-      status: 'waiting',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+    const response = await fetch(`${API_BASE_URL}/api/parties`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: data.name.trim(),
+        party_size: Number(data.party_size) || 1,
+        phone: data.phone?.trim() || null,
+        notes: data.notes?.trim() || null,
+      }),
+    })
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      throw new Error(err.detail || `Failed to create party: ${response.statusText}`)
     }
-    const updated = [...parties, newParty]
-    saveStoredParties(updated)
-    return newParty
+    return response.json()
   },
 
   async updatePartyStatus(id, status) {
-    await new Promise((r) => setTimeout(r, 60))
-    const parties = getStoredParties()
-    const index = parties.findIndex((p) => p.id === id)
-    if (index === -1) throw new Error('Party not found')
+    const response = await fetch(`${API_BASE_URL}/api/parties/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status }),
+    })
 
-    parties[index] = {
-      ...parties[index],
-      status,
-      updated_at: new Date().toISOString()
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      throw new Error(err.detail || `Failed to update party: ${response.statusText}`)
     }
-    saveStoredParties(parties)
-    return parties[index]
+    return response.json()
   },
 
   async deleteParty(id) {
-    await new Promise((r) => setTimeout(r, 60))
-    const parties = getStoredParties().filter((p) => p.id !== id)
-    saveStoredParties(parties)
-    return { success: true }
-  }
+    const response = await fetch(`${API_BASE_URL}/api/parties/${id}`, {
+      method: 'DELETE',
+    })
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete party: ${response.statusText}`)
+    }
+    return response.json()
+  },
 }
