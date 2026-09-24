@@ -8,6 +8,6 @@ This repository contains homework assignments, practical projects, and experimen
 | :--- | :--- | :--- | :--- |
 | **HW 1** | AI-Native Developer Workflow (Spec-driven Django App) | [`hw1/`](./hw1) | Completed |
 | **HW 2** | Full-Stack App with AI Assistants (SeatFlow) | [`hw2/`](./hw2) | Completed |
-| **HW 3** | Test, Containerize, and Deploy an AI-Assisted App | `hw3/` | Upcoming |
+| **HW 3** | Test, Containerize, and Deploy an AI-Assisted App (Agent Relay) | [`hw3/`](./hw3) | Completed |
 | **HW 4** | DevOps and Observability for AI-Built Apps | `hw4/` | Upcoming |
 | **Final Project** | End-to-End AI-Assisted Application | `project/` | Upcoming |

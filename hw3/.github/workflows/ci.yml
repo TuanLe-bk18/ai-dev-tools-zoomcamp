@@ -1,0 +1,82 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Run Tests against PostgreSQL
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: agent_relay
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Run test suite against PostgreSQL
+        env:
+          RELAY_DATABASE_URL: postgresql+psycopg://postgres:postgrespassword@localhost:5432/agent_relay
+        run: |
+          uv run pytest -v
+
+  build-and-deploy:
+    name: Build Image and Deploy to Kubernetes
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        run: |
+          IMAGE_TAG="agent-relay:${{ github.sha }}"
+          docker build -t "$IMAGE_TAG" -t agent-relay:latest -t agent-relay:local .
+
+      - name: Create kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: agent-relay-cluster
+
+      - name: Load image into kind
+        run: |
+          kind load docker-image agent-relay:local --name agent-relay-cluster
+
+      - name: Deploy Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/postgres.yaml
+          kubectl rollout status deployment/postgres --timeout=120s
+          kubectl apply -f k8s/agent-relay.yaml
+          kubectl rollout status deployment/agent-relay --timeout=120s
+
+      - name: Smoke check deployment
+        run: |
+          kubectl get pods -A
+          kubectl get services -A
